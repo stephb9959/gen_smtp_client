@@ -1,6 +1,6 @@
 %% -*- mode: erlang; -*-
 
-{application, gen_smtp,
+{application, gen_smtp_client,
  [
   {description, "An erlang SMTP server/client framework"},
   {vsn, "0.1"},
