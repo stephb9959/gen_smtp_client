@@ -8,3 +8,4 @@ build
 .eunit/
 *~
 .#*
+ebin/gen_smtp.app
