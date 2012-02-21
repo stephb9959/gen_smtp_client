@@ -502,11 +502,11 @@ check_headers([Header | Tail], Headers) ->
 		undefined when Header == <<"MIME-Version">> ->
 			check_headers(Tail, [{<<"MIME-Version">>, <<"1.0">>} | Headers]);
 		undefined when Header == <<"Date">> ->
-			check_headers(Tail, [{<<"Date">>, list_to_binary(smtp_util:rfc5322_timestamp())} | Headers]);
+			check_headers(Tail, [{<<"Date">>, list_to_binary(gen_smtp_util:rfc5322_timestamp())} | Headers]);
 		undefined when Header == <<"From">> ->
 			erlang:error(missing_from);
 		undefined when Header == <<"Message-ID">> ->
-			check_headers(Tail, [{<<"Message-ID">>, list_to_binary(smtp_util:generate_message_id())} | Headers]);
+			check_headers(Tail, [{<<"Message-ID">>, list_to_binary(gen_smtp_util:generate_message_id())} | Headers]);
 		undefined when Header == <<"References">> ->
 			case get_header_value(<<"In-Reply-To">>, Headers) of
 				undefined ->
@@ -547,7 +547,7 @@ ensure_content_headers([Header | Tail], Type, SubType, Parameters, Headers, Body
 				<<"multipart">> ->
 					Boundary = case proplists:get_value(<<"boundary">>, proplists:get_value(<<"content-type-params">>, Parameters, [])) of
 						undefined ->
-							list_to_binary(smtp_util:generate_message_boundary());
+							list_to_binary(gen_smtp_util:generate_message_boundary());
 						B ->
 							B
 					end,

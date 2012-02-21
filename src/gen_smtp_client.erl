@@ -29,7 +29,7 @@
 		{ssl, false}, % whether to connect on 465 in ssl mode
 		{tls, if_available}, % always, never, if_available
 		{auth, if_available},
-		{hostname, smtp_util:guess_FQDN()},
+		{hostname, gen_smtp_util:guess_FQDN()},
 		{retries, 1} % how many retries per smtp host on temporary failure
 	]).
 
@@ -126,7 +126,7 @@ send_it(Email, Options) ->
 		true ->
 			[];
 		_ ->
-			smtp_util:mxlookup(RelayDomain)
+			gen_smtp_util:mxlookup(RelayDomain)
 	end,
 	%io:format("MX records for ~s are ~p~n", [RelayDomain, MXRecords]),
 	Hosts = case MXRecords of
@@ -332,7 +332,7 @@ do_AUTH_each(Socket, Username, Password, ["CRAM-MD5" | Tail]) ->
 		{ok, <<"334 ", Rest/binary>>} ->
 			Seed64 = binstr:strip(binstr:strip(Rest, right, $\n), right, $\r),
 			Seed = base64:decode_to_string(Seed64),
-			Digest = smtp_util:compute_cram_digest(Password, Seed),
+			Digest = gen_smtp_util:compute_cram_digest(Password, Seed),
 			String = base64:encode(list_to_binary([Username, " ", Digest])),
 			socket:send(Socket, [String, "\r\n"]),
 			case read_possible_multiline_reply(Socket) of
@@ -394,7 +394,7 @@ do_AUTH_each(Socket, Username, Password, [_Type | Tail]) ->
 
 -spec try_EHLO(Socket :: socket:socket(), Options :: list()) -> {ok, list()}.
 try_EHLO(Socket, Options) ->
-	ok = socket:send(Socket, ["EHLO ", proplists:get_value(hostname, Options, smtp_util:guess_FQDN()), "\r\n"]),
+	ok = socket:send(Socket, ["EHLO ", proplists:get_value(hostname, Options, gen_smtp_util:guess_FQDN()), "\r\n"]),
 	case read_possible_multiline_reply(Socket) of
 		{ok, <<"500", _Rest/binary>>} ->
 			% Unrecognized command, fall back to HELO
@@ -408,7 +408,7 @@ try_EHLO(Socket, Options) ->
 
 -spec try_HELO(Socket :: socket:socket(), Options :: list()) -> {ok, list()}.
 try_HELO(Socket, Options) ->
-	ok = socket:send(Socket, ["HELO ", proplists:get_value(hostname, Options, smtp_util:guess_FQDN()), "\r\n"]),
+	ok = socket:send(Socket, ["HELO ", proplists:get_value(hostname, Options, gen_smtp_util:guess_FQDN()), "\r\n"]),
 	case read_possible_multiline_reply(Socket) of
 		{ok, <<"250", _Rest/binary>>} ->
 			{ok, []};
@@ -890,13 +890,13 @@ session_start_test_() ->
 								?assertMatch({ok, "EHLO testing\r\n"}, socket:recv(X, 0, 1000)),
 								socket:send(X, "250-hostname\r\n250 AUTH CRAM-MD5\r\n"),
 								?assertEqual({ok, "AUTH CRAM-MD5\r\n"}, socket:recv(X, 0, 1000)),
-								Seed = smtp_util:get_cram_string(smtp_util:guess_FQDN()),
+								Seed = gen_smtp_util:get_cram_string(gen_smtp_util:guess_FQDN()),
 								DecodedSeed = base64:decode_to_string(Seed),
-								Digest = smtp_util:compute_cram_digest("pass", DecodedSeed),
+								Digest = gen_smtp_util:compute_cram_digest("pass", DecodedSeed),
 								String = binary_to_list(base64:encode(list_to_binary(["user ", Digest]))),
 								socket:send(X, "334 "++Seed++"\r\n"),
 								{ok, Packet} = socket:recv(X, 0, 1000),
-								CramDigest = smtp_util:trim_crlf(Packet),
+								CramDigest = gen_smtp_util:trim_crlf(Packet),
 								?assertEqual(String, CramDigest),
 								socket:send(X, "235 ok\r\n"),
 								?assertMatch({ok, "MAIL FROM: <test@foo.com>\r\n"}, socket:recv(X, 0, 1000)),
@@ -914,13 +914,13 @@ session_start_test_() ->
 								?assertMatch({ok, "EHLO testing\r\n"}, socket:recv(X, 0, 1000)),
 								socket:send(X, "250-hostname\r\n250 AUTH CRAM-MD5\r\n"),
 								?assertEqual({ok, "AUTH CRAM-MD5\r\n"}, socket:recv(X, 0, 1000)),
-								Seed = smtp_util:get_cram_string(smtp_util:guess_FQDN()),
+								Seed = gen_smtp_util:get_cram_string(gen_smtp_util:guess_FQDN()),
 								DecodedSeed = base64:decode_to_string(Seed),
-								Digest = smtp_util:compute_cram_digest("pass", DecodedSeed),
+								Digest = gen_smtp_util:compute_cram_digest("pass", DecodedSeed),
 								String = binary_to_list(base64:encode(list_to_binary(["user ", Digest]))),
 								socket:send(X, "334 "++Seed++"\r\n"),
 								{ok, Packet} = socket:recv(X, 0, 1000),
-								CramDigest = smtp_util:trim_crlf(Packet),
+								CramDigest = gen_smtp_util:trim_crlf(Packet),
 								?assertEqual(String, CramDigest),
 								socket:send(X, "235 ok\r\n"),
 								?assertMatch({ok, "MAIL FROM: <test@foo.com>\r\n"}, socket:recv(X, 0, 1000)),
