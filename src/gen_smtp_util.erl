@@ -22,7 +22,7 @@
 
 %% @doc Module with some general utility functions for SMTP.
 
--module(smtp_util).
+-module(gen_smtp_util).
 -export([
 		mxlookup/1, guess_FQDN/0, compute_cram_digest/2, get_cram_string/1,
 		trim_crlf/1, rfc5322_timestamp/0, zone/0, generate_message_id/0,
