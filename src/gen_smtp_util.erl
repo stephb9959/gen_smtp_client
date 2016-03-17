@@ -60,7 +60,7 @@ guess_FQDN() ->
 %% @doc Compute the CRAM digest of `Key' and `Data'
 -spec(compute_cram_digest/2 :: (Key :: binary(), Data :: string()) -> binary()).
 compute_cram_digest(Key, Data) ->
-	Bin = crypto:md5_mac(Key, Data),
+	Bin = crypto:hmac(md5,Key, Data),
 	list_to_binary([io_lib:format("~2.16.0b", [X]) || <<X>> <= Bin]).
 
 %% @doc Generate a seed string for CRAM.
@@ -102,13 +102,13 @@ zone(Val) when Val >= 0 ->
 %% @doc Generate a unique message ID 
 generate_message_id() ->
 	FQDN = guess_FQDN(),
-	Md5 = [io_lib:format("~2.16.0b", [X]) || <<X>> <= erlang:md5(term_to_binary([erlang:now(), FQDN]))],
+	Md5 = [io_lib:format("~2.16.0b", [X]) || <<X>> <= erlang:md5(term_to_binary([erlang:timestamp(), FQDN]))],
 	io_lib:format("<~s@~s>", [Md5, FQDN]).
 
 %% @doc Generate a unique MIME message boundary
 generate_message_boundary() ->
 	FQDN = guess_FQDN(),
-	["_=", [io_lib:format("~2.36.0b", [X]) || <<X>> <= erlang:md5(term_to_binary([erlang:now(), FQDN]))], "=_"].
+	["_=", [io_lib:format("~2.36.0b", [X]) || <<X>> <= erlang:md5(term_to_binary([erlang:timestamp(), FQDN]))], "=_"].
 
 
 
